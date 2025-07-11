@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import SearchBar from "../SearchBar/SearchBar";
 import MovieGrid from "../MovieGrid/MovieGrid";
@@ -16,23 +16,24 @@ export default function App() {
   const [page, setPage] = useState<number>(1);
   const [selectedMovie, setSelectedMovie] = useState<Movie | null>(null);
 
-  const { data, isLoading, isError, isFetching, refetch } = useQuery({
+  const { data, isLoading, isFetching, isError, isSuccess } = useQuery({
     queryKey: ["movies", query, page],
     queryFn: () => fetchMovies(query, page),
     enabled: !!query,
     placeholderData: keepPreviousData,
   });
 
+  useEffect(() => {
+    if (isSuccess && data?.movies.length === 0) {
+      toast.error("No movies found for your request.");
+    }
+  }, [isSuccess, data]);
+
   const handleSubmit = async (newQuery: string) => {
     if (!newQuery.trim()) return;
 
     setQuery(newQuery);
     setPage(1);
-    const { data } = await refetch();
-
-    if (data?.movies.length === 0) {
-      toast.error("No movies found for your request.");
-    }
   };
 
   const movies = data?.movies || [];
